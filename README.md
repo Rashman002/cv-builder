@@ -12,7 +12,7 @@ start-mac.command       Mac: run locally at http://localhost:3070
 
 ## Deploy
 Double-click **Deploy to VPS.command** (or Cmd+Shift+B in VS Code).
-The first time it asks for your VPS IP and domain; after that it just deploys.
+The first time it asks for your VPS login and domain; after that it just deploys.
 
 On the VPS, `/var/www/cv-builder` holds only the app files, `data/` (saved CVs) and `.env` (only if a password or port is set).
 Each deploy removes anything else there, plus the old `/var/repo/cv-builder*` and `/tmp/cv-builder-src`.
