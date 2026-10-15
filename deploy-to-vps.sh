@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 # Mac only. Sends ONLY the vps/ folder to the server and (re)starts the app.
-#   First time: ./deploy-to-vps.sh root@VPS_IP cv.lionedge.com.ng [username] [password]
-#   After that: ./deploy-to-vps.sh   (or Cmd+Shift+B in VS Code; server and domain are remembered)
+#   Double-click "Deploy to VPS.command" (or Cmd+Shift+B in VS Code).
+#   First run asks for the VPS IP and domain once, then remembers them.
+#   Optional password protection: ./deploy-to-vps.sh root@IP domain USERNAME PASSWORD
 set -euo pipefail
 cd "$(dirname "$0")"
 CONF=.deploy.conf
 if [ -f "$CONF" ]; then . "./$CONF"; fi
 TARGET="${1:-${TARGET:-}}"; DOMAIN="${2:-${DOMAIN:-}}"; U="${3:-}"; P="${4:-}"
-if [ -z "$TARGET" ] || [ -z "$DOMAIN" ]; then
-  echo "Usage: ./deploy-to-vps.sh root@VPS_IP cv.lionedge.com.ng [username] [password]"; exit 1
+if [ -z "$TARGET" ]; then
+  read -r -p "VPS IP address: " IP
+  [ -n "$IP" ] || { echo "No IP given."; exit 1; }
+  case "$IP" in *@*) TARGET="$IP";; *) TARGET="root@$IP";; esac
+fi
+if [ -z "$DOMAIN" ]; then
+  read -r -p "Domain [cv.lionedge.com.ng]: " DOMAIN
+  DOMAIN=${DOMAIN:-cv.lionedge.com.ng}
 fi
 printf 'TARGET=%q\nDOMAIN=%q\n' "$TARGET" "$DOMAIN" > "$CONF"
 
