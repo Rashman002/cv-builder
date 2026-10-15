@@ -1,0 +1,5 @@
+vps/data/
+vps/.env
+.deploy.conf
+.DS_Store
+node_modules/

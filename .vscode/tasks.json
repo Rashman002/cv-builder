@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Deploy to VPS", "type": "shell", "command": "./deploy-to-vps.sh",
+      "group": { "kind": "build", "isDefault": true }, "problemMatcher": [] },
+    { "label": "Pull from VPS", "type": "shell", "command": "./pull-from-vps.sh", "problemMatcher": [] },
+    { "label": "Run on Mac", "type": "shell", "command": "cd vps && node server.js",
+      "isBackground": true, "problemMatcher": [] }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "cv-builder",
+  "version": "1.0.0",
+  "description": "Standalone CV builder: live A4 preview, 3 templates, PDF export, server or browser storage.",
+  "main": "server.js",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

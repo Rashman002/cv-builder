@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CV Builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231B2430'/%3E%3Crect x='8' y='7' width='16' height='3' fill='%23C9A227'/%3E%3Crect x='8' y='13' width='16' height='2' fill='%23fff'/%3E%3Crect x='8' y='18' width='12' height='2' fill='%23fff'/%3E%3Crect x='8' y='23' width='14' height='2' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{--ink:#1B2430;--ink2:#56616F;--line:#D8DDE4;--bg:#E9ECF0;--panel:#FFFFFF;--soft:#F6F7F9;--gold:#C9A227;--danger:#B42318}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;height:100vh;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Top bar */
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 16px;background:var(--ink);color:#fff}
+.brand{font-weight:700;font-size:16px;margin-right:6px;white-space:nowrap}
+.brand b{color:var(--gold)}
+.bar select{max-width:230px;padding:7px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.25);background:#263142;color:#fff;font:inherit}
+.actions{display:flex;flex-wrap:wrap;gap:6px}
+.bar button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.28);padding:7px 12px;border-radius:7px;cursor:pointer}
+.bar button:hover{background:rgba(255,255,255,.08)}
+.bar button.primary{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:650}
+.bar button.primary:hover{background:#D9B53A}
+.status{margin-left:auto;font-size:12px;opacity:.8;white-space:nowrap}
+
+/* Layout */
+.tabs{display:none;background:var(--panel);border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:10px;border:0;background:none;cursor:pointer;font-weight:600;color:var(--ink2);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--gold)}
+.app{flex:1;min-height:0;display:grid;grid-template-columns:minmax(340px,460px) 1fr}
+.editor{overflow:auto;padding:16px;background:var(--soft);border-right:1px solid var(--line);margin:0}
+.preview{overflow:auto;padding:24px 16px 48px}
+
+/* Editor */
+.editor details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.editor summary{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-weight:650;cursor:pointer;list-style:none;user-select:none}
+.editor summary::-webkit-details-marker{display:none}
+.editor summary::after{content:"+";font-size:18px;line-height:1;color:var(--ink2)}
+.editor details[open]>summary::after{content:"\2212"}
+.sec-body{padding:0 14px 14px}
+.field{display:block;margin-top:10px}
+.field>span{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:4px}
+.editor input[type=text],.editor input[type=email],.editor input[type=tel],.editor input[type=url],.editor textarea,.editor select{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+.editor textarea{resize:vertical;min-height:84px;line-height:1.45}
+.editor input:focus,.editor textarea:focus,.editor select:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px rgba(201,162,39,.35)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.grid2 .full{grid-column:1/-1}
+.hint{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+.item{border:1px solid var(--line);border-radius:8px;padding:10px 12px 12px;margin-top:10px;background:var(--soft)}
+.item-head{display:flex;align-items:center;gap:6px}
+.item-title{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{flex:none;width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:14px;line-height:1}
+.icon-btn:disabled{opacity:.35;cursor:default}
+.icon-btn.del:hover{color:var(--danger);border-color:var(--danger)}
+.item-body{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.item-body .field{grid-column:1/-1}
+.item-body .field.half{grid-column:auto}
+.add-btn{display:block;width:100%;margin-top:10px;padding:9px;border:1.5px dashed #A3ADB8;border-radius:8px;background:transparent;cursor:pointer;font-weight:600}
+.add-btn:hover{border-color:var(--ink);background:#fff}
+.tpl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tpl{position:relative;display:block;border:1.5px solid var(--line);border-radius:8px;padding:8px 8px 6px;cursor:pointer;text-align:center;font-size:12.5px;font-weight:600;background:#fff}
+.tpl input{position:absolute;opacity:0;pointer-events:none}
+.tpl svg{display:block;width:100%;height:auto;margin-bottom:4px;border-radius:3px;box-shadow:0 0 0 1px var(--line)}
+.tpl.on{border-color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--gold)}
+.tpl:has(input:focus-visible){outline:2px solid var(--gold);outline-offset:2px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw.on{box-shadow:0 0 0 2px var(--ink)}
+.sw.custom{position:relative;overflow:hidden;background:conic-gradient(#e63946,#f4a261,#e9c46a,#2a9d8f,#457b9d,#6a4c93,#e63946)}
+.sw.custom input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer;border:0;padding:0}
+.photo-row{display:flex;align-items:center;gap:10px}
+.photo-row img,.ph-empty{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none}
+.ph-empty{display:grid;place-items:center;background:#fff;border:1px dashed #A3ADB8;font-size:11px;color:var(--ink2)}
+.btn-sm{display:inline-block;padding:6px 12px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;font-size:13px;font-weight:600}
+.btn-sm:hover{border-color:var(--ink)}
+
+/* Preview */
+.page-holder{position:relative;margin:0 auto;overflow:hidden}
+.page-wrap{position:relative;transform-origin:top left}
+.guides{position:absolute;inset:0;pointer-events:none}
+.gl{position:absolute;left:0;right:0;border-top:1.5px dashed rgba(180,35,24,.55)}
+.gl span{position:absolute;right:8px;top:3px;padding:0 5px;background:#fff;color:var(--danger);font:600 11px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;border-radius:3px}
+.preview-note{max-width:210mm;margin:12px auto 0;text-align:center;font-size:12px;color:var(--ink2)}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);max-width:min(92vw,520px);padding:10px 16px;border-radius:8px;background:var(--ink);color:#fff;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:900px){
+  .tabs{display:flex}
+  .app{grid-template-columns:1fr}
+  .app[data-view=edit] .preview{display:none}
+  .app[data-view=preview] .editor{display:none}
+  .editor{border-right:0}
+  .status{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+/* ===== The CV page ===== */
+.page{--accent:#1B2430;--on-accent:#fff;width:210mm;min-height:297mm;background:#fff;color:#222;font-size:10.5pt;line-height:1.45;box-shadow:0 1px 2px rgba(27,36,48,.08),0 10px 28px rgba(27,36,48,.14)}
+.page h1,.page h2,.page h3,.page p,.page ul{margin:0}
+.page a{color:inherit;text-decoration:none}
+.page.measuring,.page.measuring.t-sidebar{min-height:0!important;height:auto!important}
+.f-sans{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+.f-serif{font-family:Georgia,Cambria,"Times New Roman",Times,serif}
+.f-serif.page{line-height:1.5}
+.f-modern{font-family:"Avenir Next",Avenir,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.page h1{font-size:24pt;line-height:1.1;font-weight:700;color:var(--accent)}
+.page h1.ph{color:#B8BEC6}
+.headline{margin-top:4pt;font-size:12pt;color:#444}
+.contact{display:flex;flex-wrap:wrap;gap:2pt 14pt;margin-top:7pt;font-size:9.5pt;color:#444}
+.cv-sec{margin-top:14pt}
+.cv-sec h2{font-size:11.5pt;font-weight:700;color:var(--accent);padding-bottom:3pt;margin-bottom:7pt;border-bottom:1.2pt solid var(--accent);break-after:avoid;page-break-after:avoid}
+.cv-sec>p+p{margin-top:5pt}
+.entry{margin-bottom:9pt}
+.entry:last-child{margin-bottom:0}
+.entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:12pt;break-inside:avoid;page-break-inside:avoid}
+.entry h3{font-size:10.5pt;font-weight:700}
+.org{color:#555}
+.dates{flex:none;white-space:nowrap;font-size:9.5pt;color:#555}
+.entry ul{padding-left:13pt;margin-top:3pt}
+.entry li{margin:1.5pt 0}
+.entry p{margin-top:3pt}
+.plain{list-style:none;padding:0}
+.plain li{margin:2pt 0}
+.muted{color:#666}
+.chips{display:flex;flex-wrap:wrap;gap:4pt 5pt;list-style:none;padding:0}
+.chips li{padding:1pt 7pt;border:.8pt solid #C9CED5;border-radius:3pt;font-size:9.5pt}
+.photo{display:block;width:30mm;height:30mm;border-radius:50%;object-fit:cover}
+
+/* Classic */
+.t-classic{padding:16mm 17mm}
+.t-classic .head{display:flex;justify-content:space-between;align-items:center;gap:10mm;padding-bottom:2pt}
+
+/* Sidebar */
+.t-sidebar{display:table;table-layout:fixed;height:297mm;border-collapse:collapse}
+.t-sidebar .side{display:table-cell;width:66mm;vertical-align:top;padding:14mm 8mm;background:var(--accent);color:var(--on-accent);font-size:9.5pt}
+.t-sidebar .main{display:table-cell;vertical-align:top;padding:14mm 12mm 14mm 11mm}
+.t-sidebar .side .photo{margin:0 auto 4mm;border:2.5pt solid var(--on-accent)}
+.t-sidebar .side .cv-sec h2{color:var(--on-accent);border-bottom-color:var(--on-accent);font-size:10.5pt}
+.t-sidebar .side .contact{display:block;margin:0;color:inherit;font-size:9.5pt}
+.t-sidebar .side .ci{display:block;margin-bottom:3pt;overflow-wrap:anywhere}
+.t-sidebar .side .chips li{border-color:var(--on-accent);font-size:9pt}
+.t-sidebar .side .muted{color:inherit;opacity:.8}
+.t-sidebar .side .cv-sec:first-child{margin-top:0}
+.t-sidebar .main .head{padding-bottom:2pt}
+
+/* Minimal */
+.t-minimal{padding:18mm 20mm}
+.t-minimal .head{text-align:center}
+.t-minimal .photo{width:24mm;height:24mm;margin:0 auto 6pt}
+.t-minimal h1{font-size:26pt;font-weight:300;letter-spacing:.4pt}
+.t-minimal .contact{justify-content:center}
+.t-minimal .cv-sec h2{display:flex;align-items:center;gap:8pt;border:0;padding:0;font-weight:600}
+.t-minimal .cv-sec h2::after{content:"";flex:1;border-top:.8pt solid #CDD2D8}
+.t-minimal .chips li{border:0;background:#EEF0F3}
+
+/* ===== Printing / Save as PDF (Chrome, Safari, Firefox) ===== */
+@page{size:A4;margin:12mm 0}
+@page :first{margin-top:0}
+@media print{
+  html,body{height:auto;background:#fff}
+  body{display:block}
+  .bar,.tabs,.editor,.toast,.guides,.preview-note{display:none!important}
+  .app{display:block!important;height:auto}
+  .preview{display:block!important;padding:0;overflow:visible}
+  .page-holder{width:auto!important;height:auto!important;overflow:visible}
+  .page-wrap{transform:none!important;width:auto!important}
+  .page{box-shadow:none;min-height:284mm}
+  .t-sidebar{height:284mm}
+  .t-classic,.t-minimal{padding-bottom:0}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">CV <b>Builder</b></div>
+  <select id="cvSelect" aria-label="Choose a CV"></select>
+  <div class="actions">
+    <button type="button" data-cmd="new">New</button>
+    <button type="button" data-cmd="duplicate">Duplicate</button>
+    <button type="button" data-cmd="delete">Delete</button>
+    <button type="button" data-cmd="import">Import</button>
+    <button type="button" data-cmd="export">Export</button>
+    <button type="button" data-cmd="print" class="primary">Save as PDF</button>
+  </div>
+  <span id="status" class="status"></span>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+</header>
+<nav class="tabs" aria-label="Switch view">
+  <button type="button" data-tab="edit" class="on">Edit</button>
+  <button type="button" data-tab="preview">Preview</button>
+</nav>
+<main class="app" id="app" data-view="edit">
+  <form id="editor" class="editor" autocomplete="off" novalidate></form>
+  <section id="preview" class="preview" aria-label="CV preview">
+    <div id="pageHolder" class="page-holder">
+      <div id="pageWrap" class="page-wrap">
+        <article id="cv" class="page"></article>
+        <div id="guides" class="guides" aria-hidden="true"></div>
+      </div>
+    </div>
+    <p class="preview-note">Red dashed lines show roughly where a new A4 page starts.</p>
+  </section>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const clone = o => JSON.parse(JSON.stringify(o));
+const getPath = (o, p) => p.split('.').reduce((x, k) => (x == null ? x : x[k]), o);
+const setPath = (o, p, v) => { const k = p.split('.'); let x = o; for (let i = 0; i < k.length - 1; i++) x = x[k[i]]; x[k[k.length - 1]] = v; };
+const slug = s => String(s || 'cv').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cv';
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 3600);
+}
+function setStatus(txt) { $('#status').textContent = txt; }
+
+/* ---------- data model ---------- */
+const ACCENTS = ['#1B2430', '#0F4C5C', '#2F5D50', '#7A1F2B', '#3B3F99', '#8A5A00', '#3F4650'];
+const FONTS = [['sans', 'Helvetica / Arial'], ['serif', 'Georgia (serif)'], ['modern', 'Avenir / Segoe UI']];
+const TEMPLATES = [['classic', 'Classic'], ['sidebar', 'Sidebar'], ['minimal', 'Minimal']];
+
+const REPEATERS = {
+  experience: {
+    label: 'Work experience', add: 'Add job', empty: 'Start with your most recent job.',
+    blank: { role: '', company: '', location: '', start: '', end: '', bullets: '' },
+    fields: [['role', 'Job title'], ['company', 'Company', 'text', '', true], ['location', 'Location', 'text', '', true],
+      ['start', 'Start', 'text', 'Jan 2021', true], ['end', 'End', 'text', 'Present', true],
+      ['bullets', 'What you did and achieved (one point per line)', 'textarea', 'Cut project delivery time by 20% by…']],
+    title: i => [i.role, i.company].filter(Boolean).join(' at ') || 'New job'
+  },
+  education: {
+    label: 'Education', add: 'Add education', empty: 'Add degrees, diplomas or school certificates.',
+    blank: { degree: '', school: '', location: '', start: '', end: '', details: '' },
+    fields: [['degree', 'Qualification', 'text', 'B.Sc. Building'], ['school', 'School', 'text', '', true], ['location', 'Location', 'text', '', true],
+      ['start', 'Start', 'text', '2014', true], ['end', 'End', 'text', '2018', true],
+      ['details', 'Details (optional)', 'textarea', 'Second Class Upper. Final project on…']],
+    title: i => i.degree || i.school || 'New education'
+  },
+  certifications: {
+    label: 'Certifications', add: 'Add certification', empty: 'Add professional certificates and licences.',
+    blank: { name: '', issuer: '', year: '' },
+    fields: [['name', 'Certificate'], ['issuer', 'Issued by', 'text', '', true], ['year', 'Year', 'text', '', true]],
+    title: i => i.name || 'New certification'
+  },
+  projects: {
+    label: 'Projects', add: 'Add project', empty: 'Show work you are proud of.',
+    blank: { name: '', link: '', description: '' },
+    fields: [['name', 'Project name'], ['link', 'Link (optional)', 'text', 'example.com/project'], ['description', 'Description', 'textarea']],
+    title: i => i.name || 'New project'
+  },
+  languages: {
+    label: 'Languages', add: 'Add language', empty: 'List the languages you speak.',
+    blank: { name: '', level: '' },
+    fields: [['name', 'Language', 'text', 'English', true], ['level', 'Level', 'text', 'Fluent', true]],
+    title: i => [i.name, i.level].filter(Boolean).join(', ') || 'New language'
+  }
+};
+
+function blankCV() {
+  return {
+    id: uid(), title: 'Untitled CV', template: 'classic', accent: '#1B2430', font: 'sans',
+    personal: { name: '', headline: '', email: '', phone: '', location: '', website: '', linkedin: '', photo: '' },
+    summary: '', experience: [], education: [], skills: '', certifications: [], projects: [], languages: [],
+    references: '', updated: 0
+  };
+}
+
+function sampleCV() {
+  const c = blankCV();
+  Object.assign(c, {
+    title: 'Sample CV',
+    personal: { name: 'Adaeze Okafor', headline: 'Project Manager, Construction', email: 'adaeze@example.com', phone: '+234 800 000 0000',
+      location: 'Lagos, Nigeria', website: '', linkedin: 'linkedin.com/in/example', photo: '' },
+    summary: 'Project manager with 7 years of experience delivering residential and commercial builds on time and within budget. Known for tight cost control, clear reporting and calm site leadership.',
+    experience: [
+      { role: 'Project Manager', company: 'Example Developments Ltd', location: 'Lagos', start: 'Mar 2021', end: 'Present',
+        bullets: 'Delivered 4 residential blocks (48 units) with total budget of ₦1.2bn\nReduced material waste by 15% through weekly stock reconciliation\nManage a team of 3 site engineers and 40+ artisans' },
+      { role: 'Site Engineer', company: 'Sample Construction Co.', location: 'Abuja', start: 'Jun 2018', end: 'Feb 2021',
+        bullets: 'Supervised structural works on a 6-storey office building\nPrepared daily site reports and bar bending schedules' }
+    ],
+    education: [{ degree: 'B.Sc. Building', school: 'University of Lagos', location: 'Lagos', start: '2013', end: '2017', details: '' }],
+    skills: 'Project planning, Cost control, MS Project, AutoCAD, Site supervision, Procurement, Health & safety, Stakeholder reporting',
+    certifications: [{ name: 'Certified Associate in Project Management (CAPM)', issuer: 'PMI', year: '2022' }],
+    languages: [{ name: 'English', level: 'Fluent' }, { name: 'Igbo', level: 'Native' }],
+    references: 'Available on request.'
+  });
+  return c;
+}
+
+function normalize(o) {
+  const b = blankCV();
+  const out = Object.assign(b, o || {});
+  out.personal = Object.assign(blankCV().personal, (o && o.personal) || {});
+  for (const k of Object.keys(REPEATERS)) {
+    const arr = Array.isArray(out[k]) ? out[k] : [];
+    out[k] = arr.map(it => Object.assign(clone(REPEATERS[k].blank), it || {}));
+  }
+  for (const k of ['title', 'summary', 'skills', 'references', 'accent', 'font', 'template']) out[k] = String(out[k] ?? '');
+  if (!TEMPLATES.some(t => t[0] === out.template)) out.template = 'classic';
+  if (!FONTS.some(f => f[0] === out.font)) out.font = 'sans';
+  if (!/^#[0-9a-f]{6}$/i.test(out.accent)) out.accent = '#1B2430';
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(out.id || '')) out.id = uid();
+  return out;
+}
+
+/* ---------- storage: server when available, otherwise this browser ---------- */
+const LS = 'cvb:cv:';
+const memory = {};
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch (_) { return memory[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (_) { memory[k] = v; } },
+  del(k) { try { localStorage.removeItem(k); } catch (_) { delete memory[k]; } },
+  keys() { try { return Object.keys(localStorage); } catch (_) { return Object.keys(memory); } }
+};
+const Store = {
+  mode: 'local',
+  async init() {
+    if (location.protocol === 'file:') return;
+    try {
+      const r = await fetch('api/health', { cache: 'no-store' });
+      if (r.ok && (await r.json()).ok) this.mode = 'server';
+    } catch (_) { /* static hosting or offline: stay local */ }
+  },
+  async list() {
+    if (this.mode === 'server') {
+      const r = await fetch('api/cvs', { cache: 'no-store' });
+      if (!r.ok) throw new Error('list failed');
+      return r.json();
+    }
+    return ls.keys().filter(k => k.startsWith(LS)).map(k => {
+      try { const c = JSON.parse(ls.get(k)); return { id: c.id, title: c.title, updated: c.updated || 0 }; } catch (_) { return null; }
+    }).filter(Boolean).sort((a, b) => b.updated - a.updated);
+  },
+  async get(id) {
+    if (this.mode === 'server') {
+      const r = await fetch('api/cvs/' + encodeURIComponent(id), { cache: 'no-store' });
+      return r.ok ? r.json() : null;
+    }
+    const raw = ls.get(LS + id); return raw ? JSON.parse(raw) : null;
+  },
+  async save(c) {
+    c.updated = Date.now();
+    if (this.mode === 'server') {
+      const r = await fetch('api/cvs/' + encodeURIComponent(c.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) });
+      if (!r.ok) throw new Error('save failed');
+      return;
+    }
+    ls.set(LS + c.id, JSON.stringify(c));
+  },
+  async remove(id) {
+    if (this.mode === 'server') {
+      const r = await fetch('api/cvs/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!r.ok) throw new Error('delete failed');
+      return;
+    }
+    ls.del(LS + id);
+  }
+};
+
+/* ---------- state & saving ---------- */
+let cv = null;
+let saveTimer = null;
+const openSecs = new Set(['design', 'personal']);
+const savedLabel = () => Store.mode === 'server' ? 'All changes saved' : 'All changes saved in this browser';
+
+function queueSave() {
+  setStatus('Saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 600);
+}
+async function saveNow() {
+  clearTimeout(saveTimer); saveTimer = null;
+  try { await Store.save(cv); setStatus(savedLabel()); }
+  catch (_) { setStatus('Not saved: server unreachable'); toast('Changes could not be saved. Check your connection, then edit again to retry.'); }
+}
+async function flush() { if (saveTimer) await saveNow(); }
+
+async function refreshSelect() {
+  let list = [];
+  try { list = await Store.list(); } catch (_) { list = []; }
+  if (!list.some(x => x.id === cv.id)) list.unshift({ id: cv.id, title: cv.title });
+  $('#cvSelect').innerHTML = list.map(x => `<option value="${esc(x.id)}"${x.id === cv.id ? ' selected' : ''}>${esc(x.title || 'Untitled CV')}</option>`).join('');
+}
+function updateSelectLabel() {
+  const o = $('#cvSelect').querySelector(`option[value="${CSS.escape(cv.id)}"]`);
+  if (o) o.textContent = cv.title || 'Untitled CV';
+}
+async function load(next) {
+  cv = normalize(next);
+  await refreshSelect();
+  renderEditor();
+  renderPreview();
+}
+
+/* ---------- editor ---------- */
+function field(path, label, type = 'text', ph = '', half = false) {
+  const v = getPath(cv, path) ?? '';
+  const cls = 'field' + (half ? ' half' : '');
+  if (type === 'textarea') return `<label class="${cls}"><span>${esc(label)}</span><textarea data-path="${path}" rows="4" placeholder="${esc(ph)}">${esc(v)}</textarea></label>`;
+  return `<label class="${cls}"><span>${esc(label)}</span><input type="${type}" data-path="${path}" value="${esc(v)}" placeholder="${esc(ph)}"></label>`;
+}
+function section(id, title, inner) {
+  return `<details data-sec="${id}"${openSecs.has(id) ? ' open' : ''}><summary>${esc(title)}</summary><div class="sec-body">${inner}</div></details>`;
+}
+function thumb(t) {
+  const l = (x, y, w, c = '#C3CAD3', h = 2) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${c}"/>`;
+  let s = '<svg viewBox="0 0 60 78" aria-hidden="true"><rect width="60" height="78" fill="#fff"/>';
+  if (t === 'classic') {
+    s += l(6, 7, 28, '#1B2430', 5) + '<circle cx="50" cy="10" r="5" fill="#D5DAE0"/>' + l(6, 15, 20, '#8D98A5');
+    s += l(6, 23, 48, '#1B2430', 1.2); [27, 31, 35, 39].forEach(y => s += l(6, y, 44));
+    s += l(6, 46, 48, '#1B2430', 1.2); [50, 54, 58, 62, 66].forEach(y => s += l(6, y, 40));
+  } else if (t === 'sidebar') {
+    s += '<rect width="20" height="78" fill="#1B2430"/><circle cx="10" cy="11" r="5" fill="#5D6876"/>';
+    [22, 26, 30, 38, 42, 46, 50].forEach(y => s += l(4, y, 12, '#5D6876'));
+    s += l(25, 7, 26, '#1B2430', 5) + l(25, 15, 18, '#8D98A5');
+    [24, 28, 32, 36, 44, 48, 52, 56, 60].forEach(y => s += l(25, y, 30));
+  } else {
+    s += '<circle cx="30" cy="10" r="4.5" fill="#D5DAE0"/>' + l(16, 18, 28, '#1B2430', 4) + l(20, 25, 20, '#8D98A5');
+    s += l(6, 33, 14, '#1B2430') + l(22, 33.5, 32, '#E1E5EA', 1);
+    [38, 42, 46].forEach(y => s += l(6, y, 46));
+    s += l(6, 53, 14, '#1B2430') + l(22, 53.5, 32, '#E1E5EA', 1);
+    [58, 62, 66].forEach(y => s += l(6, y, 42));
+  }
+  return s + '</svg>';
+}
+function repeater(key) {
+  const R = REPEATERS[key], items = cv[key];
+  const body = items.map((it, i) => `
+    <div class="item" data-key="${key}" data-idx="${i}">
+      <div class="item-head">
+        <span class="item-title">${esc(R.title(it))}</span>
+        <button type="button" class="icon-btn" data-action="up" data-key="${key}" data-idx="${i}" aria-label="Move up"${i === 0 ? ' disabled' : ''}>↑</button>
+        <button type="button" class="icon-btn" data-action="down" data-key="${key}" data-idx="${i}" aria-label="Move down"${i === items.length - 1 ? ' disabled' : ''}>↓</button>
+        <button type="button" class="icon-btn del" data-action="remove" data-key="${key}" data-idx="${i}" aria-label="Remove">✕</button>
+      </div>
+      <div class="item-body">${R.fields.map(f => field(`${key}.${i}.${f[0]}`, f[1], f[2] || 'text', f[3] || '', !!f[4])).join('')}</div>
+    </div>`).join('');
+  const title = R.label + (items.length ? ` (${items.length})` : '');
+  return section(key, title, (items.length ? '' : `<p class="hint">${esc(R.empty)}</p>`) + body +
+    `<button type="button" class="add-btn" data-action="add" data-key="${key}">+ ${esc(R.add)}</button>`);
+}
+function renderEditor() {
+  const p = cv.personal;
+  const design = `
+    ${field('title', 'CV name (shown in your list and used for the PDF name)')}
+    <div class="field"><span>Template</span><div class="tpl-row">${TEMPLATES.map(([v, l]) =>
+      `<label class="tpl${cv.template === v ? ' on' : ''}"><input type="radio" name="tpl" data-path="template" value="${v}"${cv.template === v ? ' checked' : ''}>${thumb(v)}${l}</label>`).join('')}</div></div>
+    <div class="field"><span>Accent colour</span><div class="swatches">${ACCENTS.map(c =>
+      `<button type="button" class="sw${c.toLowerCase() === cv.accent.toLowerCase() ? ' on' : ''}" data-action="accent" data-color="${c}" style="background:${c}" aria-label="Use colour ${c}"></button>`).join('')}
+      <span class="sw custom${ACCENTS.some(c => c.toLowerCase() === cv.accent.toLowerCase()) ? '' : ' on'}" title="Pick any colour"><input type="color" data-path="accent" value="${esc(cv.accent)}" aria-label="Pick any colour"></span></div></div>
+    <label class="field"><span>Font</span><select data-path="font">${FONTS.map(([v, l]) => `<option value="${v}"${cv.font === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
+  const personal = `
+    <div class="grid2">
+      <div class="full">${field('personal.name', 'Full name')}</div>
+      <div class="full">${field('personal.headline', 'Job title or headline', 'text', 'e.g. Senior Accountant')}</div>
+      ${field('personal.email', 'Email', 'email')}
+      ${field('personal.phone', 'Phone', 'tel')}
+      ${field('personal.location', 'City, country', 'text', 'Lagos, Nigeria')}
+      ${field('personal.website', 'Website', 'text', 'yoursite.com')}
+      <div class="full">${field('personal.linkedin', 'LinkedIn', 'text', 'linkedin.com/in/yourname')}</div>
+    </div>
+    <div class="field"><span>Photo (optional)</span><div class="photo-row">
+      ${p.photo ? `<img src="${p.photo}" alt="Your photo">` : '<div class="ph-empty">No photo</div>'}
+      <label class="btn-sm">${p.photo ? 'Change' : 'Upload'}<input type="file" accept="image/*" data-action="photo" hidden></label>
+      ${p.photo ? '<button type="button" class="btn-sm" data-action="photo-remove">Remove</button>' : ''}
+    </div></div>`;
+  $('#editor').innerHTML =
+    section('design', 'Design', design) +
+    section('personal', 'Personal details', personal) +
+    section('summary', 'Profile summary', field('summary', 'A short introduction (3 to 4 sentences)', 'textarea', 'Who you are, what you are good at, and what you want next.')) +
+    repeater('experience') +
+    repeater('education') +
+    section('skills', 'Skills', field('skills', 'Separate skills with commas or new lines', 'textarea', 'Excel, Team leadership, Negotiation')) +
+    repeater('certifications') +
+    repeater('projects') +
+    repeater('languages') +
+    section('references', 'References', field('references', 'Referees, or leave as “Available on request”', 'textarea', 'Available on request.'));
+}
+function markDesign() {
+  const ed = $('#editor');
+  ed.querySelectorAll('.tpl').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
+  let preset = false;
+  ed.querySelectorAll('.sw[data-color]').forEach(b => { const on = b.dataset.color.toLowerCase() === cv.accent.toLowerCase(); b.classList.toggle('on', on); if (on) preset = true; });
+  const custom = ed.querySelector('.sw.custom'); if (custom) custom.classList.toggle('on', !preset);
+}
+function structural(focusKey) {
+  const ed = $('#editor'), top = ed.scrollTop;
+  renderEditor(); ed.scrollTop = top;
+  if (focusKey) {
+    const items = ed.querySelectorAll(`.item[data-key="${focusKey}"]`);
+    const last = items[items.length - 1];
+    if (last) { last.scrollIntoView({ block: 'nearest' }); const inp = last.querySelector('input,textarea'); if (inp) inp.focus({ preventScroll: true }); }
+  }
+  renderPreview(); queueSave();
+}
+
+const ed = $('#editor');
+ed.addEventListener('submit', e => e.preventDefault());
+ed.addEventListener('toggle', e => {
+  const d = e.target; if (!d.dataset || !d.dataset.sec) return;
+  d.open ? openSecs.add(d.dataset.sec) : openSecs.delete(d.dataset.sec);
+}, true);
+function onEdit(e) {
+  const t = e.target, path = t.dataset && t.dataset.path;
+  if (!path) return;
+  if (t.type === 'radio' && !t.checked) return;
+  if (getPath(cv, path) === t.value) return;
+  setPath(cv, path, t.value);
+  if (path === 'template' || path === 'accent') markDesign();
+  if (path === 'title') updateSelectLabel();
+  const item = t.closest('.item');
+  if (item) { const k = item.dataset.key; $('.item-title', item).textContent = REPEATERS[k].title(cv[k][+item.dataset.idx]); }
+  renderPreview(); queueSave();
+}
+ed.addEventListener('input', onEdit);
+ed.addEventListener('change', onEdit);
+ed.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]');
+  if (!b || b.tagName === 'INPUT') return;
+  const a = b.dataset.action, k = b.dataset.key, i = Number(b.dataset.idx);
+  if (a === 'add') { cv[k].push(clone(REPEATERS[k].blank)); openSecs.add(k); structural(k); }
+  else if (a === 'remove') { if (confirm('Remove this entry?')) { cv[k].splice(i, 1); structural(); } }
+  else if (a === 'up' && i > 0) { [cv[k][i - 1], cv[k][i]] = [cv[k][i], cv[k][i - 1]]; structural(); }
+  else if (a === 'down' && i < cv[k].length - 1) { [cv[k][i + 1], cv[k][i]] = [cv[k][i], cv[k][i + 1]]; structural(); }
+  else if (a === 'accent') {
+    cv.accent = b.dataset.color;
+    const ci = ed.querySelector('input[type=color]'); if (ci) ci.value = cv.accent;
+    markDesign(); renderPreview(); queueSave();
+  }
+  else if (a === 'photo-remove') { cv.personal.photo = ''; structural(); }
+});
+ed.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.action !== 'photo' || !t.files || !t.files[0]) return;
+  const f = t.files[0];
+  if (!/^image\//.test(f.type)) { toast('Choose an image file, such as JPG or PNG.'); return; }
+  const url = URL.createObjectURL(f), img = new Image();
+  img.onload = () => {
+    const size = 360, m = Math.min(img.naturalWidth, img.naturalHeight);
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size);
+    g.drawImage(img, (img.naturalWidth - m) / 2, (img.naturalHeight - m) / 2, m, m, 0, 0, size, size);
+    cv.personal.photo = c.toDataURL('image/jpeg', 0.86);
+    URL.revokeObjectURL(url); structural();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('That image could not be read. Try a JPG or PNG.'); };
+  img.src = url;
+});
+
+/* ---------- preview ---------- */
+function onAccent(hex) {
+  const n = parseInt(hex.slice(1), 16), ch = [n >> 16 & 255, n >> 8 & 255, n & 255].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  const L = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  return L > 0.4 ? '#1d1d1f' : '#ffffff';
+}
+function renderPreview() {
+  const p = cv.personal, page = $('#cv');
+  page.className = `page t-${cv.template} f-${cv.font}`;
+  page.style.setProperty('--accent', cv.accent);
+  page.style.setProperty('--on-accent', onAccent(cv.accent));
+
+  const lines = s => String(s || '').split(/\n/).map(x => x.replace(/^\s*[-•*▪–]\s*/, '').trim()).filter(Boolean);
+  const paras = s => String(s || '').split(/\n/).map(x => x.trim()).filter(Boolean).map(x => `<p>${esc(x)}</p>`).join('');
+  const href = u => { u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? u : 'https://' + u; };
+  const range = (a, b) => esc([a, b].map(x => String(x || '').trim()).filter(Boolean).join(' – '));
+  const sec = (t, inner) => inner ? `<section class="cv-sec"><h2>${t}</h2>${inner}</section>` : '';
+  const entry = (title, sub, dates, body) => {
+    const s = sub.map(x => String(x || '').trim()).filter(Boolean).join(', ');
+    return `<div class="entry"><div class="entry-head"><div>${title ? `<h3>${esc(title)}</h3>` : ''}${s ? `<div class="org">${esc(s)}</div>` : ''}</div>${dates ? `<div class="dates">${dates}</div>` : ''}</div>${body || ''}</div>`;
+  };
+
+  const contacts = [
+    p.email && `<a href="mailto:${esc(p.email.trim())}">${esc(p.email)}</a>`,
+    p.phone && `<a href="tel:${esc(p.phone.replace(/[^\d+]/g, ''))}">${esc(p.phone)}</a>`,
+    p.location && esc(p.location),
+    p.website && `<a href="${esc(href(p.website))}">${esc(p.website)}</a>`,
+    p.linkedin && `<a href="${esc(href(p.linkedin))}">${esc(p.linkedin)}</a>`
+  ].filter(Boolean);
+  const contactHTML = contacts.length ? `<div class="contact">${contacts.map(c => `<span class="ci">${c}</span>`).join('')}</div>` : '';
+  const photo = p.photo ? `<img class="photo" src="${p.photo}" alt="">` : '';
+  const nameHTML = p.name.trim() ? `<h1>${esc(p.name)}</h1>` : '<h1 class="ph">Your name</h1>';
+  const headlineHTML = p.headline.trim() ? `<div class="headline">${esc(p.headline)}</div>` : '';
+
+  const exp = cv.experience.filter(x => x.role || x.company).map(x => {
+    const b = lines(x.bullets);
+    return entry(x.role, [x.company, x.location], range(x.start, x.end), b.length ? `<ul>${b.map(y => `<li>${esc(y)}</li>`).join('')}</ul>` : '');
+  }).join('');
+  const edu = cv.education.filter(x => x.degree || x.school).map(x =>
+    entry(x.degree || x.school, x.degree ? [x.school, x.location] : [x.location], range(x.start, x.end), paras(x.details))).join('');
+  const projects = cv.projects.filter(x => x.name || x.description).map(x =>
+    entry(x.name, [], '', (x.link.trim() ? `<div class="org"><a href="${esc(href(x.link))}">${esc(x.link)}</a></div>` : '') + paras(x.description))).join('');
+  const certItems = cv.certifications.filter(x => x.name).map(x =>
+    `<li><strong>${esc(x.name)}</strong>${x.issuer ? `, ${esc(x.issuer)}` : ''}${x.year ? ` <span class="muted">(${esc(x.year)})</span>` : ''}</li>`).join('');
+  const certs = certItems ? `<ul class="plain">${certItems}</ul>` : '';
+  const langItems = cv.languages.filter(x => x.name).map(x =>
+    `<li>${esc(x.name)}${x.level ? ` <span class="muted">(${esc(x.level)})</span>` : ''}</li>`).join('');
+  const langs = langItems ? `<ul class="plain">${langItems}</ul>` : '';
+  const skillList = String(cv.skills || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+  const skills = skillList.length ? `<ul class="chips">${skillList.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : '';
+  const summary = paras(cv.summary);
+  const refs = paras(cv.references);
+
+  let html;
+  if (cv.template === 'sidebar') {
+    html = `<aside class="side">${photo}${sec('Contact', contactHTML)}${sec('Skills', skills)}${sec('Languages', langs)}${sec('Certifications', certs)}</aside>
+      <div class="main"><header class="head">${nameHTML}${headlineHTML}</header>
+      ${sec('Profile', summary)}${sec('Experience', exp)}${sec('Education', edu)}${sec('Projects', projects)}${sec('References', refs)}</div>`;
+  } else {
+    const head = cv.template === 'minimal'
+      ? `<header class="head">${photo}${nameHTML}${headlineHTML}${contactHTML}</header>`
+      : `<header class="head"><div>${nameHTML}${headlineHTML}${contactHTML}</div>${photo}</header>`;
+    html = head + sec('Profile', summary) + sec('Experience', exp) + sec('Education', edu) + sec('Skills', skills) +
+      sec('Projects', projects) + sec('Certifications', certs) + sec('Languages', langs) + sec('References', refs);
+  }
+  page.innerHTML = html;
+  requestAnimationFrame(fit);
+}
+function fit() {
+  const pv = $('#preview'), page = $('#cv'), wrap = $('#pageWrap'), hold = $('#pageHolder');
+  if (!pv.clientWidth) return;
+  const w = page.offsetWidth;
+  page.classList.add('measuring');
+  const contentH = page.offsetHeight;
+  page.classList.remove('measuring');
+  const h = page.offsetHeight;
+  const s = Math.min(1, (pv.clientWidth - 32) / w);
+  wrap.style.width = w + 'px';
+  wrap.style.transform = `scale(${s})`;
+  hold.style.width = (w * s) + 'px';
+  hold.style.height = (h * s) + 'px';
+  const mm = w / 210;
+  let y = 285 * mm, n = 2, out = '';
+  while (y < contentH - 2) { out += `<div class="gl" style="top:${y}px"><span>Page ${n}</span></div>`; y += 273 * mm; n++; }
+  $('#guides').innerHTML = out;
+}
+new ResizeObserver(() => fit()).observe($('#preview'));
+
+/* ---------- top bar commands ---------- */
+$('.bar').addEventListener('click', async e => {
+  const b = e.target.closest('[data-cmd]'); if (!b) return;
+  const cmd = b.dataset.cmd;
+  if (cmd === 'new') {
+    await flush(); const c = blankCV(); await Store.save(c).catch(() => {}); await load(c);
+    openSecs.add('personal'); toast('New CV created.');
+  } else if (cmd === 'duplicate') {
+    await flush(); const c = clone(cv); c.id = uid(); c.title = (cv.title || 'Untitled CV') + ' (copy)';
+    await Store.save(c).catch(() => {}); await load(c); toast('Copy created.');
+  } else if (cmd === 'delete') {
+    if (!confirm(`Delete “${cv.title || 'Untitled CV'}”? This cannot be undone.`)) return;
+    clearTimeout(saveTimer); saveTimer = null;
+    try { await Store.remove(cv.id); } catch (_) { toast('Could not delete. Check your connection.'); return; }
+    let list = []; try { list = await Store.list(); } catch (_) {}
+    let next = list.length ? await Store.get(list[0].id) : null;
+    if (!next) { next = blankCV(); await Store.save(next).catch(() => {}); }
+    await load(next); setStatus(savedLabel()); toast('CV deleted.');
+  } else if (cmd === 'import') {
+    $('#importFile').click();
+  } else if (cmd === 'export') {
+    await flush();
+    const blob = new Blob([JSON.stringify(cv, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = slug(cv.title || cv.personal.name) + '.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast('Exported. Use Import to open this file on another device.');
+  } else if (cmd === 'print') {
+    await flush();
+    toast('In the print window, choose “Save as PDF” and turn off headers and footers.');
+    setTimeout(() => window.print(), 300);
+  }
+});
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const items = Array.isArray(data) ? data : [data];
+    if (!items.length || !items.every(x => x && typeof x === 'object' && x.personal)) throw new Error('bad');
+    await flush();
+    let last = null;
+    for (const it of items) { const c = normalize(Object.assign({}, it, { id: uid() })); await Store.save(c); last = c; }
+    await load(last); toast(items.length > 1 ? `${items.length} CVs imported.` : 'CV imported.');
+  } catch (_) { toast('That file is not a CV exported from this app.'); }
+});
+$('#cvSelect').addEventListener('change', async e => {
+  await flush();
+  const next = await Store.get(e.target.value).catch(() => null);
+  if (!next) { toast('That CV could not be opened.'); await refreshSelect(); return; }
+  await load(next); setStatus(savedLabel());
+});
+$('.tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  $('#app').dataset.view = b.dataset.tab;
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  if (b.dataset.tab === 'preview') requestAnimationFrame(fit);
+});
+
+/* PDF file name follows the CV */
+let prevTitle = document.title;
+window.addEventListener('beforeprint', () => { prevTitle = document.title; document.title = (cv.personal.name ? cv.personal.name + ' CV' : cv.title) || 'CV'; });
+window.addEventListener('afterprint', () => { document.title = prevTitle; });
+window.addEventListener('beforeunload', e => { if (saveTimer) { saveNow(); e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- start ---------- */
+(async function boot() {
+  setStatus('Loading…');
+  await Store.init();
+  let list = [];
+  try { list = await Store.list(); } catch (_) { toast('Could not reach the server.'); }
+  let first = list.length ? await Store.get(list[0].id).catch(() => null) : null;
+  if (!first) { first = sampleCV(); await Store.save(first).catch(() => {}); }
+  await load(first);
+  setStatus(savedLabel());
+})();
+})();
+</script>
+</body>
+</html>
